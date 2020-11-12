@@ -1,1 +1,2 @@
 Ansible-lab
+# PROVIOSING_AZUREVM
