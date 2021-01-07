@@ -97,42 +97,84 @@ resource "azurerm_network_interface_security_group_association" "bind-akses-ssh"
     network_security_group_id = azurerm_network_security_group.akses-ssh.id
 }
 
-resource "azurerm_linux_virtual_machine" "main" {
+resource "azurerm_managed_disk" "main" {
+ count                = 6
+ name                 = "datadisk_${count.index}"
+ location             = azurerm_resource_group.main.location
+ resource_group_name  = azurerm_resource_group.main.name
+ storage_account_type = "Standard_LRS"
+ create_option        = "Empty"
+ disk_size_gb         = "4"
+}
+
+resource "azurerm_virtual_machine" "main" {
+#resource "azurerm_linux_virtual_machine" "main" {
   count = 6
-  name = "manage-node${count.index}"
+  name = "node${count.index}"
   resource_group_name = azurerm_resource_group.main.name
   location = azurerm_resource_group.main.location
-  size = "Standard_B1s"
-  computer_name = "manage-node${count.index}"
-  admin_username = "azure-administrator"
-  disable_password_authentication = true
+  vm_size = "Standard_B1s"
+  #computer_name = "manage-node${count.index}"
+  #admin_username = "azure-administrator"
+  #disable_password_authentication = true
   network_interface_ids = [element(azurerm_network_interface.main.*.id, count.index)]
 
-  admin_ssh_key {
-        username = "azure-administrator"
-        public_key = file("~/.ssh/id_rsa.pub")
-        }
+  #admin_ssh_key {
+  #      username = "azure-administrator"
+  #      public_key = file("~/.ssh/id_rsa.pub")
+  #     }
 
-  os_disk {
+  storage_image_reference {
+    publisher = "RedHat"
+    offer     = "RHEL"
+    sku       = "8"
+    version   = "8.0.20191023"
+  }
+
+  storage_os_disk {
+    name  = "OS_disk_${count.index}"
     caching = "ReadWrite"
-    storage_account_type = "Standard_LRS"
+    managed_disk_type = "Standard_LRS"
+    create_option     = "FromImage"
   }
 
-   source_image_reference {
-    publisher = "OpenLogic"
-    offer     = "CentOS"
-    sku       = "8_2"
-    version   = "8.2.2020062400"
+  #storage_data_disk {
+  #  name              = "datadisk_new_${count.index}"
+  # managed_disk_type = "Standard_LRS"
+  # create_option     = "Attach"
+  # lun               = 0
+  # disk_size_gb      = 5
+  #}
+
+  storage_data_disk {
+   name            = element(azurerm_managed_disk.main.*.name, count.index)
+   managed_disk_id = element(azurerm_managed_disk.main.*.id, count.index)
+   create_option   = "Attach"
+   lun             = 0
+   disk_size_gb    = element(azurerm_managed_disk.main.*.disk_size_gb, count.index)
+ }
+
+  os_profile {
+    computer_name  = "node${count.index}"
+    admin_username = "automation"
   }
- 
-   provisioner "file" {
+  os_profile_linux_config {
+    disable_password_authentication = true
+    ssh_keys {
+    path = "/home/automation/.ssh/authorized_keys"
+    key_data = file("~/.ssh/id_rsa.pub")
+  }
+  }
+
+
+    provisioner "file" {
    source = "initial-config.sh"
    destination = "/tmp/initial-config.sh"
    
    connection {
 			host = element(azurerm_public_ip.pip.*.ip_address, count.index)
 			type	= "ssh"
-			user	= "azure-administrator"
+			user	= "automation"
       private_key = file("~/.ssh/id_rsa")
       }  
     }  
@@ -146,38 +188,49 @@ resource "azurerm_linux_virtual_machine" "main" {
 connection {
 			host = element(azurerm_public_ip.pip.*.ip_address, count.index)
 			type	= "ssh"
-			user	= "azure-administrator"
+			user	= "automation"
       private_key = file("~/.ssh/id_rsa")
 			}  
 } 
 
-provisioner "file" {
-   source = "setup-ansible.sh"
-   destination = "/tmp/setup-ansible.sh"
+#provisioner "file" {
+ #  source = "setup-ansible.sh"
+  # destination = "/tmp/setup-ansible.sh"
    
-   connection {
-			host = element(azurerm_public_ip.pip.*.ip_address, count.index)
-			type	= "ssh"
-			user	= "azure-administrator"
-      private_key = file("~/.ssh/id_rsa")
-      }  
-    }  
+   #connection {
+		#	host = element(azurerm_public_ip.pip.*.ip_address, count.index)
+		#	type	= "ssh"
+		#	user	= "azure-administrator"
+     # private_key = file("~/.ssh/id_rsa")
+      #}  
+    #}  
 
-  provisioner "remote-exec" {
-    inline = [
-	"chmod +x /tmp/setup-ansible.sh",
-  "bash /tmp/setup-ansible.sh"   
-   ]
+#  provisioner "remote-exec" {
+ #   inline = [
+#	"chmod +x /tmp/setup-ansible.sh",
+ # "bash /tmp/setup-ansible.sh"   
+ #  ]
 
-connection {
-			host = element(azurerm_public_ip.pip.*.ip_address, count.index)
-			type	= "ssh"
-			user	= "azure-administrator"
-      private_key = file("~/.ssh/id_rsa")
-			}  
-} 
-
-
+#connection {
+			#host = element(azurerm_public_ip.pip.*.ip_address, count.index)
+			#type	= "ssh"
+			#user	= "azure-administrator"
+      #private_key = file("~/.ssh/id_rsa")
+			#}  
+#} 
 
 }
+
+#resource "azurerm_managed_disk" "example" {
+#  count = 6
+#  name = "data-disk${count.index}-disk2"
+#  location             = azurerm_resource_group.main.location
+#  resource_group_name  = azurerm_resource_group.main.name
+#  storage_account_type = "Standard_LRS"
+#  create_option        = "FromImage"
+#  disk_size_gb         = 4
+#}
+
+
+
 

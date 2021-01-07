@@ -1,16 +1,6 @@
 #!/bin/bash
-if [ "$HOSTNAME" == "master-node" ];
-then
-pip3 install ansible==2.8 --user
-else
-echo "Berhasil install ansible 2.8 di master node untuk keperluan Hands on Labs RHCE 8 EX294"
-fi
-
-touch /root/auto-shutdown.sh
-cat <<'AUTO-SHUTDOWN' > /root/auto-shutdown.sh
-#!/bin/bash
 #
-# This is scheduled in CRON using ROOT, it runs every 5 minutes 
+# This is scheduled in CRON using ROOT, it runs every 5 minutes
 # and uses who -a to determine user activity. Once the idle time is
 # more than the threshold value it shuts the system down.
 #
@@ -33,13 +23,5 @@ echo "Bellow threshold"
 fi
 else
 echo "Idle time is: 0"
-fi 
+fi
 echo "Ending"
-AUTO-SHUTDOWN
-chmod +x /root/auto-shutdown.sh
-
-
-
-
-
-
