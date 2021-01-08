@@ -1,6 +1,4 @@
 #!/bin/bash
-echo "P@55w0rd.1" | passwd --stdin root
-echo "P@55w0rd.1" | passwd --stdin azure-administrator
 #subscription-manager register --username puji.riawan --password trM3st4r47v85#@! --auto-attach
 #subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms
 #subscription-manager repos --enable=rhel-8-for-x86_64-appstream-rpms
@@ -9,11 +7,10 @@ sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/" /etc/ssh/sshd_c
 sed -i "s/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/" /etc/ssh/sshd_config
 systemctl restart sshd
 
-if [ "$HOSTNAME" == "node0" ];
+if [ "$HOSTNAME" == "node1" ];
 then
 hostnamectl set-hostname control.local
-echo "P@55w9rd.1" | passwd --stdin root
-echo "P@55w9rd.1" | passwd --stdin azure-administrator
+echo "P@55w0rd.1" | passwd --stdin root
 subscription-manager register --username puji.riawan --password trM3st4r47v85#@! --auto-attach
 subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms
 subscription-manager repos --enable=rhel-8-for-x86_64-appstream-rpms
