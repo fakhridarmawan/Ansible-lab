@@ -1,8 +1,4 @@
 #!/bin/bash
-#subscription-manager register --username puji.riawan --password trM3st4r47v85#@! --auto-attach
-#subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms
-#subscription-manager repos --enable=rhel-8-for-x86_64-appstream-rpms
-
 sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/" /etc/ssh/sshd_config
 sed -i "s/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/" /etc/ssh/sshd_config
 systemctl restart sshd
@@ -14,20 +10,15 @@ echo "P@55w0rd.1" | passwd --stdin root
 subscription-manager register --username puji.riawan --password trM3st4r47v85#@! --auto-attach
 subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms
 subscription-manager repos --enable=rhel-8-for-x86_64-appstream-rpms
+subscription-manager repos --enable=ansible-2.8-for-rhel-8-x86_64-rpms
 sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/" /etc/ssh/sshd_config
 sed -i "s/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/" /etc/ssh/sshd_config
 systemctl restart sshd
-subscription-manager repos --enable=ansible-2.8-for-rhel-8-x86_64-rpms
-dnf install -y python3
-dnf install -y ansible
 else
 echo "P@55w0rd.1" | passwd --stdin root
 subscription-manager register --username puji.riawan --password trM3st4r47v85#@! --auto-attach
 subscription-manager repos --enable=rhel-8-for-x86_64-baseos-rpms
 subscription-manager repos --enable=rhel-8-for-x86_64-appstream-rpms
-sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/" /etc/ssh/sshd_config
-sed -i "s/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/" /etc/ssh/sshd_config
-systemctl restart sshd
 fi
 
 cat <<'AUTO-SHUTDOWN' > /home/automation/auto-shutdown.sh

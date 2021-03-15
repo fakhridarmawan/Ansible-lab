@@ -31,7 +31,8 @@ resource "azurerm_subnet" "internal" {
   resource_group_name = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes = ["10.0.3.0/24"]
-}
+
+  }
 
 # Membuat dan mengassign publik ip ke VM yang di provisioning supaya dapat di akses dari internet
 resource "azurerm_public_ip" "pip" {
@@ -65,10 +66,7 @@ resource "azurerm_network_security_group" "akses-ssh" {
         
     }
 
-    tags = {
-        environment = "LAB ANSIBLE"
     }
-}
 
 
 resource "azurerm_network_interface" "main" {
@@ -95,6 +93,8 @@ resource "azurerm_network_interface_security_group_association" "bind-akses-ssh"
     count = 6
     network_interface_id      = element(azurerm_network_interface.main.*.id, count.index + 1)
     network_security_group_id = azurerm_network_security_group.akses-ssh.id
+
+   
 }
 
 resource "azurerm_managed_disk" "main_group1" {
@@ -105,6 +105,10 @@ resource "azurerm_managed_disk" "main_group1" {
  storage_account_type = "Standard_LRS"
  create_option        = "Empty"
  disk_size_gb         = "1"
+
+ tags = {
+    environment = "LAB ANSIBLE"
+  }
 }
 
 resource "azurerm_managed_disk" "main_group2" {
@@ -115,6 +119,10 @@ resource "azurerm_managed_disk" "main_group2" {
  storage_account_type = "Standard_LRS"
  create_option        = "Empty"
  disk_size_gb         = "2"
+
+ tags = {
+    environment = "LAB ANSIBLE"
+  }
 }
 
 resource "azurerm_virtual_machine" "main_vm_group1" {
