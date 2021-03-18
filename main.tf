@@ -1,5 +1,13 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "=2.46.0"
+    }
+  }
+}
+
 provider "azurerm" {
-  version = "~>2"
   features {}
 }
 
@@ -36,7 +44,7 @@ resource "azurerm_subnet" "internal" {
 
 # Membuat dan mengassign publik ip ke VM yang di provisioning supaya dapat di akses dari internet
 resource "azurerm_public_ip" "pip" {
-  count = 6
+  count = 3
   name = "${var.prefix}-pip-${count.index + 1}"
   resource_group_name = azurerm_resource_group.main.name
   location = azurerm_resource_group.main.location
@@ -70,7 +78,7 @@ resource "azurerm_network_security_group" "akses-ssh" {
 
 
 resource "azurerm_network_interface" "main" {
-  count               = 6
+  count               = 3
   name                = "${var.prefix}-nic-vm${count.index + 1}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
@@ -90,7 +98,7 @@ resource "azurerm_network_interface" "main" {
 
 # Binding security group ke network interface yang sudah dibuat di atas.
 resource "azurerm_network_interface_security_group_association" "bind-akses-ssh" {
-    count = 6
+    count = 3
     network_interface_id      = element(azurerm_network_interface.main.*.id, count.index + 1)
     network_security_group_id = azurerm_network_security_group.akses-ssh.id
 
@@ -98,7 +106,7 @@ resource "azurerm_network_interface_security_group_association" "bind-akses-ssh"
 }
 
 resource "azurerm_managed_disk" "main_group1" {
- count                = 3
+ count                = 1
  name                 = "datadisk_${count.index + 1}"
  location             = azurerm_resource_group.main.location
  resource_group_name  = azurerm_resource_group.main.name
@@ -112,8 +120,8 @@ resource "azurerm_managed_disk" "main_group1" {
 }
 
 resource "azurerm_managed_disk" "main_group2" {
- count                = 3
- name                 = "datadisk_${4 + count.index}"
+ count                = 2
+ name                 = "datadisk_${2 + count.index}"
  location             = azurerm_resource_group.main.location
  resource_group_name  = azurerm_resource_group.main.name
  storage_account_type = "Standard_LRS"
@@ -127,7 +135,7 @@ resource "azurerm_managed_disk" "main_group2" {
 
 resource "azurerm_virtual_machine" "main_vm_group1" {
 #resource "azurerm_linux_virtual_machine" "main" {
-  count = 3
+  count = 1
   name = "node${count.index + 1}"
   resource_group_name = azurerm_resource_group.main.name
   location = azurerm_resource_group.main.location
@@ -143,10 +151,10 @@ resource "azurerm_virtual_machine" "main_vm_group1" {
   #     }
 
   storage_image_reference {
-    publisher = "RedHat"
-    offer     = "RHEL"
-    sku       = "8"
-    version   = "8.0.20191023"
+    publisher = "OpenLogic"
+    offer     = "CentOS"
+    sku       = "7.7"
+    version   = "7.7.2020062400"
   }
 
   storage_os_disk {
@@ -272,15 +280,15 @@ resource "null_resource" "next" {
 
 resource "azurerm_virtual_machine" "main_vm_group2" {
 #resource "azurerm_linux_virtual_machine" "main" {
-  count = 3
-  name = "node${4 + count.index}"
+  count = 2
+  name = "node${2 + count.index}"
   resource_group_name = azurerm_resource_group.main.name
   location = azurerm_resource_group.main.location
   vm_size = "Standard_B1s"
   #computer_name = "manage-node${count.index}"
   #admin_username = "azure-administrator"
   #disable_password_authentication = true
-  network_interface_ids = [element(azurerm_network_interface.main.*.id, 4 + count.index)]
+  network_interface_ids = [element(azurerm_network_interface.main.*.id, 2 + count.index)]
 
   #admin_ssh_key {
   #      username = "azure-administrator"
@@ -288,14 +296,14 @@ resource "azurerm_virtual_machine" "main_vm_group2" {
   #     }
 
   storage_image_reference {
-    publisher = "RedHat"
-    offer     = "RHEL"
-    sku       = "8"
-    version   = "8.0.20191023"
+    publisher = "OpenLogic"
+    offer     = "CentOS"
+    sku       = "7.7"
+    version   = "7.7.2020062400"
   }
 
   storage_os_disk {
-    name  = "OS_disk_${4 + count.index}"
+    name  = "OS_disk_${2 + count.index}"
     caching = "ReadWrite"
     managed_disk_type = "Standard_LRS"
     create_option     = "FromImage"
@@ -310,15 +318,15 @@ resource "azurerm_virtual_machine" "main_vm_group2" {
   #}
 
   storage_data_disk {
-   name            = element(azurerm_managed_disk.main_group2.*.name, 4 + count.index)
-   managed_disk_id = element(azurerm_managed_disk.main_group2.*.id, 4 + count.index)
+   name            = element(azurerm_managed_disk.main_group2.*.name, 2 + count.index)
+   managed_disk_id = element(azurerm_managed_disk.main_group2.*.id, 2 + count.index)
    create_option   = "Attach"
    lun             = 0
-   disk_size_gb    = element(azurerm_managed_disk.main_group2.*.disk_size_gb, 4 + count.index)
+   disk_size_gb    = element(azurerm_managed_disk.main_group2.*.disk_size_gb, 2 + count.index)
  }
 
   os_profile {
-    computer_name  = "node${4 + count.index}"
+    computer_name  = "node${2 + count.index}"
     admin_username = "automation"
   }
   os_profile_linux_config {
@@ -335,7 +343,7 @@ resource "azurerm_virtual_machine" "main_vm_group2" {
    destination = "/tmp/initial-config.sh"
    
    connection {
-			host = element(azurerm_public_ip.pip.*.ip_address, 4 + count.index)
+			host = element(azurerm_public_ip.pip.*.ip_address, 2 + count.index)
 			type	= "ssh"
 			user	= "automation"
       private_key = file("~/.ssh/id_rsa")
@@ -349,7 +357,7 @@ resource "azurerm_virtual_machine" "main_vm_group2" {
    ]
 
 connection {
-			host = element(azurerm_public_ip.pip.*.ip_address, 4 + count.index)
+			host = element(azurerm_public_ip.pip.*.ip_address, 2 + count.index)
 			type	= "ssh"
 			user	= "automation"
       private_key = file("~/.ssh/id_rsa")
